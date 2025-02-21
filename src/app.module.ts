@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
+import { ScrapingModule } from './scraping/scraping.module';
 config();
 
 @Module({
@@ -18,6 +19,7 @@ config();
       synchronize: false,
       migrations: ['dist/migrations/*.js'],
     }),
+    ScrapingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
