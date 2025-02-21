@@ -164,6 +164,7 @@ export class ArticleService {
 
   async findAll(query: GetArticlesDto) {
     const { search, source, page = 1, limit = 10, sort = 'DESC' } = query;
+    const validSort = sort === 'ASC' ? 'ASC' : 'DESC';
 
     const where: any = {};
 
@@ -183,7 +184,7 @@ export class ArticleService {
           author: true,
         },
       },
-      order: { publishedDate: sort }, //order by publishedDate
+      order: { publishedDate: validSort }, //order by publishedDate
       take: limit,
       skip: (page - 1) * limit,
     });

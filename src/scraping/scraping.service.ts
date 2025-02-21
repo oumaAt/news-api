@@ -20,8 +20,9 @@ export class ScrapingService {
   async extractArticles() {
     try {
       this.browser = await puppeteer.launch({
-        executablePath:
-          'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        // executablePath:
+        //   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         headless: true,
       });
       const page = await this.browser.newPage();
@@ -29,7 +30,9 @@ export class ScrapingService {
       await page.goto(this.siteUrl, {
         waitUntil: 'networkidle0',
       });
-      const allArticles = await this.extractArticlesWithPagination(page);
+      const allArticles = await this.extractArticlesWithPagination(
+        page,
+      );
 
       console.log(`Successfully extracted ${allArticles.length}`);
       console.log(allArticles[0]);

@@ -1,29 +1,50 @@
-import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsOptional, IsInt, Min } from 'class-validator';
 
 export class GetArticlesDto {
-  @IsOptional()
+  @ApiProperty({
+    description: 'Recherche par texte dans les titres',
+    example: 'Show',
+    required: false,
+  })
   @IsString()
-  search?: string; // search by title
+  @IsOptional()
+  search?: string;
 
-  @IsOptional()
+  @ApiProperty({
+    description: 'Filtrer les articles par source',
+    example: 'vincentwoo.com',
+    required: false,
+  })
   @IsString()
+  @IsOptional()
   source?: string;
 
+  @ApiProperty({
+    description: 'Tri ascendant(ASC) ou descendant (DESC)',
+    example: 'DESC',
+    required: false,
+  })
   @IsOptional()
-  @Type(() => Number)
+  sort?: string;
+
+  @ApiProperty({
+    description: "Nombre d'articles à retourner par page",
+    example: 10,
+    required: false,
+  })
   @IsInt()
   @Min(1)
-  page?: number = 1;
-
   @IsOptional()
-  @Type(() => Number)
+  limit?: number;
+
+  @ApiProperty({
+    description: 'Numero de page',
+    example: 1,
+    required: false,
+  })
   @IsInt()
   @Min(1)
-  @Max(100)
-  limit?: number = 10;
-
   @IsOptional()
-  @IsString()
-  sort?: 'ASC' | 'DESC' = 'DESC';
+  page?: number;
 }
