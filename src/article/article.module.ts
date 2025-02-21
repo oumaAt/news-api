@@ -8,6 +8,7 @@ import { UserService } from '../user/user.service';
 import { CommentService } from '../comment/comment.service';
 import { ScrapingService } from '../scraping/scraping.service';
 import { ArticleController } from './article.controller';
+import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Article, User, Comment])],
@@ -16,6 +17,7 @@ import { ArticleController } from './article.controller';
     UserService,
     ScrapingService,
     CommentService,
+    ElasticsearchService
   ],
   controllers: [ArticleController],
 })

@@ -7,6 +7,7 @@ import { ScrapingModule } from './scraping/scraping.module';
 import { ArticleModule } from './article/article.module';
 import { UserModule } from './user/user.module';
 import { CommentModule } from './comment/comment.module';
+import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
 config();
 
 @Module({
@@ -26,6 +27,7 @@ config();
     ArticleModule,
     UserModule,
     CommentModule,
+    ElasticsearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

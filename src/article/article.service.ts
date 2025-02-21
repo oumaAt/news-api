@@ -8,6 +8,7 @@ import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateArticleDto } from './dto/createArticle.dto';
 import { GetArticlesDto } from './dto/getArticles.dto';
+import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
 
 interface CommentData {
   text: string;
@@ -31,6 +32,7 @@ export class ArticleService {
 
     private readonly userService: UserService,
     private readonly commentService: CommentService,
+    private readonly elasticsearchService: ElasticsearchService,
   ) {}
 
   async createMany(articles: any[]) {
@@ -81,6 +83,10 @@ export class ArticleService {
     }));
     console.log(articlesToSave[0]);
     const createdArticles = await this.articleRepository.save(articlesToSave);
+
+    //bulk index elasticsearch
+    await this.elasticsearchService.bulkIndexArticles(createdArticles);
+    
     return [...existingArticles, ...createdArticles];
   }
 
