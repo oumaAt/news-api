@@ -45,7 +45,6 @@ export class CommentService {
         toCreateComments.push(commentData);
       }
     }
-    console.log({ toCreateComments });
     const commentsToSave = toCreateComments.map((comment) => ({
       ...comment,
       author: { id: comment.authorId },

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -44,10 +44,10 @@ export class UserService {
       (user) => !existingUsernames.has(user.username),
     );
 
-    console.log('New users to insert:', newUsers.length);
+    Logger.log('New users to insert:', newUsers.length);
 
     if (newUsers.length === 0) {
-      console.log('All users already exist, nothing to insert.');
+      Logger.log('All users already exist, nothing to insert.');
     }
 
     // Insérer uniquement les nouveaux utilisateurs

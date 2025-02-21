@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class ElasticsearchService {
     ]);
 
     await this.client.bulk({ body: bulkBody });
-    console.log(`Indexed ${articles.length} articles in Elasticsearch`);
+    Logger.log(`Indexed ${articles.length} articles in Elasticsearch`);
   }
 
   async searchArticlesByTitle(word: string) {

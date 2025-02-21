@@ -42,7 +42,7 @@ export class ArticleService {
       const articleDto = plainToClass(CreateArticleDto, article);
       const errors = await validate(articleDto);
       if (errors.length > 0) {
-        console.log(errors);
+        Logger.error(errors);
         throw new ConflictException(
           `Validation failed for article with title: ${article.title}`,
         );
@@ -71,7 +71,7 @@ export class ArticleService {
       return true;
     });
 
-    console.log('newArticles', newArticles.length);
+    Logger.log('newArticles', newArticles.length);
 
     if (newArticles.length === 0) {
       Logger.warn('All articles already exist');
@@ -107,7 +107,6 @@ export class ArticleService {
       },
       [] as { username: string }[],
     );
-    console.log({ users });
 
     const uniqueUsers = Array.from(
       new Set(users.map((user) => user.username)),
@@ -115,7 +114,6 @@ export class ArticleService {
 
     // Bulk insert users
     const createdUsers = await this.userService.createMany(uniqueUsers);
-    console.log({ createdUsers });
     //Prepare articles data with authorId
     const toCreateArticles = articlesData.map((articleData) => {
       const author = createdUsers.find(
@@ -204,12 +202,12 @@ export class ArticleService {
     // Check if articles in cash
     const cachedArticles = await redisClient.get(cacheKey);
     if (cachedArticles) {
-      console.log('Get from Redis');
+      Logger.log('Get from Redis');
       return JSON.parse(cachedArticles);
     }
 
     // if no cash, get from DB
-    console.log('Get from MySQL');
+    Logger.log('Get from MySQL');
     const articles = await this.findAll({
       sort: 'DESC',
       limit: 30,

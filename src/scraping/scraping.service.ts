@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import puppeteer, { Browser, Page } from 'puppeteer';
 
 interface Article {
@@ -30,15 +30,12 @@ export class ScrapingService {
       await page.goto(this.siteUrl, {
         waitUntil: 'networkidle0',
       });
-      const allArticles = await this.extractArticlesWithPagination(
-        page,
-      );
+      const allArticles = await this.extractArticlesWithPagination(page);
 
-      console.log(`Successfully extracted ${allArticles.length}`);
-      console.log(allArticles[0]);
+      Logger.log(`Successfully extracted ${allArticles.length}`);
       return allArticles;
     } catch (error) {
-      console.error(error);
+      Logger.error(error);
       return [];
     } finally {
       if (this.browser) await this.browser.close();
@@ -51,18 +48,18 @@ export class ScrapingService {
     while (moreArticles) {
       const articles = await this.extractArticleData(page, this.browser);
       allArticles.push(...articles);
-      console.log(
+      Logger.log(
         `Successfully extracted ${articles.length}, total: ${allArticles.length}`,
       );
 
       const moreButtonExists = await page.$('.morelink');
-      console.log(`More articles exists: ${moreButtonExists ? 'Yes' : 'No'}`);
+      Logger.log(`More articles exists: ${moreButtonExists ? 'Yes' : 'No'}`);
       if (moreButtonExists) {
         await page.click('.morelink');
         await new Promise((resolve) => setTimeout(resolve, 3000));
       } else {
         moreArticles = false;
-        console.log('No more articles to load.');
+        Logger.log('No more articles to load.');
         break;
       }
     }
