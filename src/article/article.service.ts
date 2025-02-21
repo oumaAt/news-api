@@ -7,6 +7,7 @@ import { CommentService } from 'src/comment/comment.service';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateArticleDto } from './dto/createArticle.dto';
+import { GetArticlesDto } from './dto/getArticles.dto';
 
 interface CommentData {
   text: string;
@@ -151,4 +152,38 @@ export class ArticleService {
     return insertedArticles;
   }
 
+  async findAll(query: GetArticlesDto) {
+    const { search, source, page = 1, limit = 10, sort = 'DESC' } = query;
+
+    const where: any = {};
+
+    if (search) {
+      where.title = Like(`%${search}%`); // search by title
+    }
+
+    if (source) {
+      where.source = source; // filter by source
+    }
+
+    const [articles, total] = await this.articleRepository.findAndCount({
+      where,
+      relations: {
+        author: true,
+        comments: {
+          author: true,
+        },
+      },
+      order: { publishedDate: sort }, //order by publishedDate
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+
+    return {
+      data: articles,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 }

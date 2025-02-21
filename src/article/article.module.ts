@@ -7,6 +7,7 @@ import { Comment } from '../comment/comment.entity';
 import { UserService } from '../user/user.service';
 import { CommentService } from '../comment/comment.service';
 import { ScrapingService } from '../scraping/scraping.service';
+import { ArticleController } from './article.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Article, User, Comment])],
@@ -16,6 +17,6 @@ import { ScrapingService } from '../scraping/scraping.service';
     ScrapingService,
     CommentService,
   ],
-  controllers: [],
+  controllers: [ArticleController],
 })
 export class ArticleModule {}
