@@ -2,14 +2,14 @@ import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Like, Repository } from 'typeorm';
 import { Article } from './article.entity';
-import { UserService } from 'src/user/user.service';
-import { CommentService } from 'src/comment/comment.service';
+import { UserService } from '../user/user.service';
+import { CommentService } from '../comment/comment.service';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateArticleDto } from './dto/createArticle.dto';
 import { GetArticlesDto } from './dto/getArticles.dto';
-import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
-import redisClient from 'src/redis/redisClient';
+import { ElasticsearchService } from '../elasticsearch/elasticsearch.service';
+import redisClient from '../redis/redisClient';
 
 interface CommentData {
   text: string;
