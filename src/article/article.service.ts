@@ -10,14 +10,14 @@ import { CreateArticleDto } from './dto/createArticle.dto';
 
 interface CommentData {
   text: string;
-  publishedAt: Date | null;
+  publishedDate: Date | null;
   author: string;
 }
 interface ArticleData {
   title: string;
   url: string;
   source: string;
-  publishedAt: Date | null;
+  publishedDate: Date | null;
   author: string;
   comments: CommentData[];
 }
@@ -117,7 +117,7 @@ export class ArticleService {
         title: articleData.title,
         url: articleData.url,
         source: articleData.source,
-        publishedAt: articleData.publishedAt,
+        publishedDate: articleData.publishedDate,
         authorId: author ? author.id : null,
       };
     });
@@ -139,7 +139,7 @@ export class ArticleService {
         }
         return {
           text: commentData.text,
-          publishedAt: commentData.publishedAt,
+          publishedDate: commentData.publishedDate,
           articleId: article.id,
           authorId: commentAuthor ? commentAuthor.id : null,
         };

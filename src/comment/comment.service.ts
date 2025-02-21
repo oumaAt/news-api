@@ -8,7 +8,7 @@ import { validate } from 'class-validator';
 
 interface CommentData {
   text: string;
-  publishedAt: Date | null;
+  publishedDate: Date | null;
   authorId: number;
   articleId: number;
 }
