@@ -4,6 +4,7 @@ export class CreateCommentDto {
   @IsString()
   text: string;
 
+  @IsOptional()
   @IsDateString()
   publishedDate: string;
 

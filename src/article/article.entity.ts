@@ -25,10 +25,12 @@ export class Article {
   @Column({ unique: true })
   url?: string;
 
-  @Column({})
+  @Column()
+  @Index('IDX_ARTICLE_SOURCE')
   source?: string;
 
   @Column({ type: 'timestamp' })
+  @Index('IDX_ARTICLE_PUBLISHED_DATE')
   publishedDate: Date;
 
   @CreateDateColumn()

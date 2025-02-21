@@ -17,6 +17,7 @@ export class CreateArticleDto {
   @IsString()
   source: string;
 
+  @IsOptional()
   @IsDateString()
   publishedDate: string;
 
