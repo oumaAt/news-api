@@ -7,50 +7,38 @@ interface Article {
   source: string;
   publishedDate: Date | null;
   author: string;
+  comments: any[];
 }
-
-let siteUrl = 'https://news.ycombinator.com/';
 
 @Injectable()
 export class ScrapingService {
+  private siteUrl = 'https://news.ycombinator.com/';
+  private browser: Browser;
+
   constructor() {}
 
   async extractArticles() {
-    let browser: Browser;
     try {
-      browser = await puppeteer.launch({
+      this.browser = await puppeteer.launch({
         executablePath:
           'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         headless: true,
       });
-      const page = await browser.newPage();
+      const page = await this.browser.newPage();
 
-      await page.goto(siteUrl, {
+      await page.goto(this.siteUrl, {
         waitUntil: 'networkidle0',
       });
       const allArticles = await this.extractArticlesWithPagination(page);
 
       console.log(`Successfully extracted ${allArticles.length}`);
       console.log(allArticles[0]);
-      const articleUrls = allArticles.map((article) => article.url);
-
-      // Fetch all comments
-      const data = await Promise.all(
-        articleUrls.map(async (url) => {
-          const comments = await this.extractArticleComments(browser, url);
-          console.log('comments', url, comments);
-          if (!comments) return;
-          const concernedArticle = allArticles.find((elt) => elt.url == url);
-          console.log({ concernedArticle });
-          return { ...concernedArticle, comments };
-        }),
-      );
-      console.log(data);
+      return allArticles;
     } catch (error) {
       console.error(error);
       return [];
     } finally {
-      if (browser) await browser.close();
+      if (this.browser) await this.browser.close();
     }
   }
 
@@ -58,7 +46,7 @@ export class ScrapingService {
     let moreArticles = true;
     let allArticles = [];
     while (moreArticles) {
-      const articles = await this.extractArticleData(page);
+      const articles = await this.extractArticleData(page, this.browser);
       allArticles.push(...articles);
       console.log(
         `Successfully extracted ${articles.length}, total: ${allArticles.length}`,
@@ -78,13 +66,12 @@ export class ScrapingService {
     return allArticles;
   }
 
-  async extractArticleData(page: Page): Promise<Article[]> {
+  async extractArticleData(page: Page, browser: Browser): Promise<Article[]> {
     const articles = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.athing')).map((elt) => {
         const titleElement = elt.querySelector(
           '.titleline a',
         ) as HTMLAnchorElement;
-
         const title = titleElement ? titleElement.innerText : null;
         const url = titleElement ? titleElement.href : null;
         const sourceElement = elt.querySelector(
@@ -95,7 +82,15 @@ export class ScrapingService {
         const metadata = elt.nextElementSibling;
         if (!metadata) {
           console.warn('no metadata:', title);
-          return { title, url, source, author: null, publishedDate: null };
+          return {
+            title,
+            url,
+            source,
+            author: null,
+            publishedDate: null,
+            commentUrl: null,
+            comments: [],
+          };
         }
 
         const authorElement = metadata.querySelector(
@@ -112,26 +107,51 @@ export class ScrapingService {
           }
         }
 
-        return { title, url, source, author, publishedDate };
+        const commentUrl = elt.querySelector('a[href^="item?id="]')
+          ? elt.querySelector('a[href^="item?id="]')?.getAttribute('href')
+          : null;
+
+        return {
+          title,
+          url,
+          source,
+          author,
+          publishedDate,
+          commentUrl,
+          comments: [],
+        };
       });
     });
-    return articles;
+
+    // Récupérer les commentaires pour chaque article
+    const articlesWithComments = await Promise.all(
+      articles.map(async (article) => {
+        if (article.commentUrl) {
+          article.comments = await this.extractArticleComments(
+            browser,
+            this.siteUrl + article.commentUrl,
+          );
+        } else {
+          article.comments = [];
+        }
+        return article;
+      }),
+    );
+
+    return articlesWithComments;
   }
 
-  async extractArticleComments(browser: Browser, articleUrl: string) {
-    const articleId = new URL(articleUrl).searchParams.get('id');
-    if (!articleId) return null;
-
+  async extractArticleComments(browser: Browser, commentUrl: string) {
     const articlePage = await browser.newPage();
-    await articlePage.goto(articleUrl, { waitUntil: 'domcontentloaded' });
-    const comments = await this.extractComments(articlePage, articleId);
+    await articlePage.goto(commentUrl, { waitUntil: 'domcontentloaded' });
+    const comments = await this.extractComments(articlePage, commentUrl);
     await articlePage.close();
 
     return comments;
   }
 
-  async extractComments(page: Page, articleId: string) {
-    await page.goto(siteUrl + `/item?id=${articleId}`, {
+  async extractComments(page: Page, commentUrl: string) {
+    await page.goto(commentUrl, {
       waitUntil: 'domcontentloaded',
     });
 

@@ -4,6 +4,9 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 import { ScrapingModule } from './scraping/scraping.module';
+import { ArticleModule } from './article/article.module';
+import { UserModule } from './user/user.module';
+import { CommentModule } from './comment/comment.module';
 config();
 
 @Module({
@@ -20,6 +23,9 @@ config();
       migrations: ['dist/migrations/*.js'],
     }),
     ScrapingModule,
+    ArticleModule,
+    UserModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
