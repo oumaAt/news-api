@@ -9,6 +9,7 @@ import { validate } from 'class-validator';
 import { CreateArticleDto } from './dto/createArticle.dto';
 import { GetArticlesDto } from './dto/getArticles.dto';
 import { ElasticsearchService } from 'src/elasticsearch/elasticsearch.service';
+import redisClient from 'src/redis/redisClient';
 
 interface CommentData {
   text: string;
@@ -81,12 +82,15 @@ export class ArticleService {
       ...article,
       author: { id: article.authorId },
     }));
-    console.log(articlesToSave[0]);
+
     const createdArticles = await this.articleRepository.save(articlesToSave);
+
+    //delete cash when a new article is added
+    await redisClient.del('recent_articles');
 
     //bulk index elasticsearch
     await this.elasticsearchService.bulkIndexArticles(createdArticles);
-    
+
     return [...existingArticles, ...createdArticles];
   }
 
@@ -191,5 +195,28 @@ export class ArticleService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async getRecentArticles() {
+    const cacheKey = 'recent_articles';
+
+    // Check if articles in cash
+    const cachedArticles = await redisClient.get(cacheKey);
+    if (cachedArticles) {
+      console.log('Get from Redis');
+      return JSON.parse(cachedArticles);
+    }
+
+    // if no cash, get from DB
+    console.log('Get from MySQL');
+    const articles = await this.findAll({
+      sort: 'DESC',
+      limit: 30,
+    });
+
+    // Save articles for 10minutes
+    await redisClient.setEx(cacheKey, 600, JSON.stringify(articles));
+
+    return articles;
   }
 }

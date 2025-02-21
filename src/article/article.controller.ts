@@ -39,4 +39,9 @@ export class ArticleController {
       );
     }
   }
+
+  @Get('recent')
+  async getRecentArticles() {
+    return this.articleService.getRecentArticles();
+  }
 }
