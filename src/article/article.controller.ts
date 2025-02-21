@@ -35,7 +35,7 @@ export class ArticleController {
   })
   async getAllArticles(@Query() query: GetArticlesDto) {
     try {
-      return this.articleService.findAll(query);
+      return await this.articleService.findAll(query);
     } catch (error) {
       Logger.error(error);
       throw new BadRequestException('Error occured when getting all articles');
@@ -69,7 +69,7 @@ export class ArticleController {
   })
   async searchArticles(@Body('word') word: string) {
     try {
-      return this.elasticsearchService.searchArticlesByTitle(word);
+      return await this.elasticsearchService.searchArticlesByTitle(word);
     } catch (error) {
       Logger.error(error);
       throw new BadRequestException(
@@ -94,7 +94,7 @@ export class ArticleController {
   })
   async getRecentArticles() {
     try {
-      return this.articleService.getRecentArticles();
+      return await this.articleService.getRecentArticles();
     } catch (error) {
       Logger.error(error);
       throw new BadRequestException(

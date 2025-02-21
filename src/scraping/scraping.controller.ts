@@ -1,7 +1,6 @@
 import { BadRequestException, Controller, Get, Logger } from '@nestjs/common';
 import { ScrapingService } from './scraping.service';
 import { ArticleService } from 'src/article/article.service';
-import { error } from 'console';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('scraping')
