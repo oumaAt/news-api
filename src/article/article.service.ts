@@ -10,6 +10,7 @@ import { CreateArticleDto } from './dto/createArticle.dto';
 import { GetArticlesDto } from './dto/getArticles.dto';
 import { ElasticsearchService } from '../elasticsearch/elasticsearch.service';
 import redisClient from '../redis/redisClient';
+import { ConsoleMessage } from 'puppeteer';
 
 interface CommentData {
   text: string;
@@ -42,6 +43,11 @@ export class ArticleService {
       const articleDto = plainToClass(CreateArticleDto, article);
       const errors = await validate(articleDto);
       if (errors.length > 0) {
+        console.log(
+          'publishedDate',
+          article.publishedDate,
+          typeof article.publishedDate,
+        );
         Logger.error(errors);
         throw new ConflictException(
           `Validation failed for article with title: ${article.title}`,
@@ -95,69 +101,73 @@ export class ArticleService {
   }
 
   async bullkCreateArticlesWithComments(articlesData: ArticleData[]) {
-    const users = articlesData.reduce(
-      (acc, articleData) => {
-        if (articleData.author) {
-          acc.push({ username: articleData.author });
-        }
-        articleData.comments.forEach((comment: CommentData) => {
-          acc.push({ username: comment.author });
-        });
-        return acc;
-      },
-      [] as { username: string }[],
-    );
-
-    const uniqueUsers = Array.from(
-      new Set(users.map((user) => user.username)),
-    ).map((username) => ({ username }));
-
-    // Bulk insert users
-    const createdUsers = await this.userService.createMany(uniqueUsers);
-    //Prepare articles data with authorId
-    const toCreateArticles = articlesData.map((articleData) => {
-      const author = createdUsers.find(
-        (user) => user.username === articleData.author,
+    try {
+      const users = articlesData.reduce(
+        (acc, articleData) => {
+          if (articleData.author) {
+            acc.push({ username: articleData.author });
+          }
+          articleData.comments.forEach((comment: CommentData) => {
+            acc.push({ username: comment.author });
+          });
+          return acc;
+        },
+        [] as { username: string }[],
       );
-      if (!author) {
-        console.log('here author', articleData);
-      }
-      return {
-        title: articleData.title,
-        url: articleData.url,
-        source: articleData.source,
-        publishedDate: articleData.publishedDate,
-        authorId: author ? author.id : null,
-      };
-    });
 
-    // Step 1.3: Bulk insert articles
-    const insertedArticles = await this.createMany(toCreateArticles);
+      const uniqueUsers = Array.from(
+        new Set(users.map((user) => user.username)),
+      ).map((username) => ({ username }));
 
-    // Step 1.4: Prepare comments data with articleId and authorId
-    const comments = articlesData.flatMap((articleData) => {
-      const article = insertedArticles.find(
-        (elt) => elt.title === articleData.title,
-      );
-      return articleData.comments.map((commentData) => {
-        const commentAuthor = createdUsers.find(
-          (user) => user.username === commentData.author,
+      // Bulk insert users
+      const createdUsers = await this.userService.createMany(uniqueUsers);
+      //Prepare articles data with authorId
+      const toCreateArticles = articlesData.map((articleData) => {
+        const author = createdUsers.find(
+          (user) => user.username === articleData.author,
         );
-        if (!commentAuthor) {
-          console.log('here', commentData);
+        if (!author) {
+          console.log('here author', articleData);
         }
         return {
-          text: commentData.text,
-          publishedDate: commentData.publishedDate,
-          articleId: article.id,
-          authorId: commentAuthor ? commentAuthor.id : null,
+          title: articleData.title,
+          url: articleData.url,
+          source: articleData.source,
+          publishedDate: new Date(articleData.publishedDate),
+          authorId: author ? author.id : null,
         };
       });
-    });
-    // Step 1.5: Bulk insert comments
-    await this.commentService.createMany(comments);
+      console.log({ toCreateArticles });
+      // Step 1.3: Bulk insert articles
+      const insertedArticles = await this.createMany(toCreateArticles);
 
-    return insertedArticles;
+      // Step 1.4: Prepare comments data with articleId and authorId
+      const comments = articlesData.flatMap((articleData) => {
+        const article = insertedArticles.find(
+          (elt) => elt.title === articleData.title,
+        );
+        return articleData.comments.map((commentData) => {
+          const commentAuthor = createdUsers.find(
+            (user) => user.username === commentData.author,
+          );
+          if (!commentAuthor) {
+            console.log('here', commentData);
+          }
+          return {
+            text: commentData.text,
+            publishedDate: commentData.publishedDate,
+            articleId: article.id,
+            authorId: commentAuthor ? commentAuthor.id : null,
+          };
+        });
+      });
+      // Step 1.5: Bulk insert comments
+      await this.commentService.createMany(comments);
+
+      return insertedArticles;
+    } catch (error) {
+      Logger.error(error);
+    }
   }
 
   async findAll(query: GetArticlesDto) {

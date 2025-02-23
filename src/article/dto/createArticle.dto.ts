@@ -1,4 +1,5 @@
 import {
+  IsDate,
   IsDateString,
   IsNotEmpty,
   IsOptional,
@@ -18,8 +19,8 @@ export class CreateArticleDto {
   source: string;
 
   @IsOptional()
-  @IsDateString()
-  publishedDate: string;
+  @IsDate()
+  publishedDate: Date;
 
   authorId?: number;
 }

@@ -21,8 +21,8 @@ export class ScrapingService {
     try {
       this.browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        // executablePath:
-        //   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        executablePath:
+          'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         headless: true,
       });
       const page = await this.browser.newPage();

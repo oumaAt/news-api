@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comment } from './comment.entity';
 import { Repository } from 'typeorm';
@@ -26,6 +26,7 @@ export class CommentService {
       const commentDto = plainToClass(CreateCommentDto, article);
       const errors = await validate(commentDto);
       if (errors.length > 0) {
+        Logger.error(errors);
         throw new ConflictException(`Validation failed for comment`);
       }
     });
@@ -47,6 +48,7 @@ export class CommentService {
     }
     const commentsToSave = toCreateComments.map((comment) => ({
       ...comment,
+      publishedDate: new Date(comment.publishedDate),
       author: { id: comment.authorId },
       article: { id: comment.articleId },
     }));

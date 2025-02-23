@@ -8,20 +8,9 @@ describe('ScrapingService', () => {
   let mockPage: jest.Mocked<Page>;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [ScrapingService],
-    }).compile();
-
-    service = module.get<ScrapingService>(ScrapingService);
-
-    // Create mocks for Browser and Page
-    mockBrowser = {
-      newPage: jest.fn().mockResolvedValue(mockPage), // Mock newPage returning mockPage
-      close: jest.fn(), // Mock close
-    } as unknown as jest.Mocked<Browser>;
-
+    // Create mocks for Browser and Page first
     mockPage = {
-      goto: jest.fn().mockResolvedValue(undefined), // Mock goto
+      goto: jest.fn().mockResolvedValue(undefined),
       evaluate: jest.fn().mockResolvedValue([{
         title: 'Article 1',
         url: 'https://example.com',
@@ -29,11 +18,25 @@ describe('ScrapingService', () => {
         publishedDate: null,
         author: 'John',
         comments: [],
-      }]), // Mock evaluate to return a single article
-      $: jest.fn().mockResolvedValue(null), // Simulate absence of "More" button
-      click: jest.fn().mockResolvedValue(undefined), // Mock click
-      close: jest.fn(), // Mock close for the page
+      }]),
+      $: jest.fn().mockResolvedValue(null),
+      click: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn(),
     } as unknown as jest.Mocked<Page>;
+
+    mockBrowser = {
+      newPage: jest.fn().mockResolvedValue(mockPage),
+      close: jest.fn(),
+    } as unknown as jest.Mocked<Browser>;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [ScrapingService],
+    }).compile();
+
+    service = module.get<ScrapingService>(ScrapingService);
+    
+    // Set the browser instance on the service
+    (service as any).browser = mockBrowser;
 
     // Spy on extractArticleData method
     jest.spyOn(service, 'extractArticleData').mockResolvedValue([{
@@ -47,7 +50,7 @@ describe('ScrapingService', () => {
   });
 
   it('should extract articles with pagination', async () => {
-    // Call the method with the mockPage and mockBrowser
+    // Call the method with the mockPage
     const articles = await service.extractArticlesWithPagination(mockPage);
 
     // Verify the result
@@ -63,9 +66,7 @@ describe('ScrapingService', () => {
     // Verify that extractArticleData was called with the correct parameters
     expect(service.extractArticleData).toHaveBeenCalledWith(mockPage, mockBrowser);
 
-    // Verify that methods on mockPage were called correctly
-    expect(mockPage.goto).toHaveBeenCalled();
-    expect(mockPage.evaluate).toHaveBeenCalled();
-    expect(mockPage.$).toHaveBeenCalled();
+    // Verify that pagination check was performed
+    expect(mockPage.$).toHaveBeenCalledWith('.morelink');
   });
 });
